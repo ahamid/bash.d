@@ -1,0 +1,31 @@
+SCRIPT=$(readlink -f "${BASH_SOURCE[0]}")
+# Absolute path this script is in
+SCRIPTPATH=`dirname $SCRIPT`
+RCPATH=`dirname $SCRIPT`/rc.d
+LOCALPATH=$RCPATH/$(hostname)
+
+export PATH=$PATH:$SCRIPTPATH/bin
+
+PRE_SCRIPT=pre
+POST_SCRIPT=post
+
+SCRIPTPATHS=($RCPATH $LOCALPATH)
+
+for scriptpath in "${SCRIPTPATHS[@]}"; do
+  if [ -d "$scriptpath" ]; then
+    unset scripts
+    [ "$PS1" ] && echo "Loading scripts from $scriptpath"
+    scripts[0]="$scriptpath/$PRE_SCRIPT"
+    scripts+=("$scriptpath"/*.sh)
+    scripts+=("$scriptpath/$POST_SCRIPT")
+    for script in "${scripts[@]}"; do
+      if [ -r "$script" ]; then
+        if [ "$PS1" ]; then
+          . "$script"
+        else
+          . "$script" >/dev/null 2>&1
+        fi
+      fi
+    done
+  fi
+done
