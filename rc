@@ -1,10 +1,13 @@
 SCRIPT=$(readlink -f "${BASH_SOURCE[0]}")
 # Absolute path this script is in
-SCRIPTPATH=`dirname $SCRIPT`
-RCPATH=`dirname $SCRIPT`/rc.d
-LOCALPATH=$RCPATH/$(hostname)
+export BASHD_HOME="$(dirname "$SCRIPT")"
 
-export PATH=$PATH:$SCRIPTPATH/bin
+: "${BASHD_CFG_ROOT:=$BASHD_HOME}"
+RCPATH="$BASHD_CFG_ROOT/rc.d"
+LOCALPATH="$RCPATH/$(hostname)"
+
+export BASHD_BIN="$BASHD_CFG_ROOT/bin"
+export PATH="$PATH:$BASHD_BIN"
 
 PRE_SCRIPT=pre
 POST_SCRIPT=post
@@ -19,6 +22,7 @@ for scriptpath in "${SCRIPTPATHS[@]}"; do
     scripts+=("$scriptpath"/*.sh)
     scripts+=("$scriptpath/$POST_SCRIPT")
     for script in "${scripts[@]}"; do
+      # skip if not readable
       if [ -r "$script" ]; then
         if [ "$PS1" ]; then
           . "$script"
